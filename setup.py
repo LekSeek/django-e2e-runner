@@ -1,5 +1,4 @@
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import find_packages, setup
 
 setup(
     name='django_e2e_runner',
