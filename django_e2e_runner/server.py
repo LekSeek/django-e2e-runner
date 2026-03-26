@@ -14,9 +14,9 @@ from django_e2e_runner.utils import wait_net_service
 
 
 class DjangoTestServer(object):
-    def __init__(self, use_threading=False, verbose=False):
-        self.address = settings.SERVER_IP
-        self.port = settings.SERVER_PORT
+    def __init__(self, use_threading=False, verbose=False, address=settings.SERVER_IP, port=settings.SERVER_PORT):
+        self.address = address
+        self.port = port
         self.use_threading = use_threading
         self.server_process = None
         self.verbose = verbose

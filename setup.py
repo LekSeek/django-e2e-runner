@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 setup(
     name='django_e2e_runner',
     packages=find_packages(),
-    version='0.1.0',
+    version='0.1.1',
     license='Proprietary',  # TODO
     description='Integrate any e2e test framework with Django, easily.',
     author='Olaf Lobozewicz',
