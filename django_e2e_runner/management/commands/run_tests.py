@@ -52,6 +52,19 @@ class Command(BaseCommand):
             '-runner', nargs=argparse.REMAINDER,
             help='All remaining arguments will be forwarded to the test runner'
         )
+        parser.add_argument(
+            '--backend-only', dest='backend_only', action='store_true',
+            help='Use it for preventing autorun of e2e tests'
+        )
+        parser.add_argument(
+            '--port', dest='port', default=settings.SERVER_PORT,
+            help='Use to change backend server port (default: {})'.format(settings.SERVER_PORT)
+        )
+        parser.add_argument(
+            '--host', dest='host', default=settings.SERVER_IP,
+            help='Use to change backend server host (default: {})'.format(settings.SERVER_IP)
+        )
+
 
     def handle(self, *args, **options):
         # TODO consider adding setup_test_environment() from Django runners.
@@ -60,32 +73,41 @@ class Command(BaseCommand):
         # Setup the test database
         keepdb = parse_command_line_bool_arg(options.get('keepdb'))
         database = setup_database(keepdb=keepdb)
+        backend_only = options.get('backend_only', False)
 
         # Run Django test server
         self.stdout.write('Starting Django test server... ', ending='')
         server_output = parse_command_line_bool_arg(
             options.get('server_output'))
         server = DjangoTestServer(use_threading=THREADED_SERVER,
-                                  verbose=server_output)
+                                  verbose=server_output,
+                                  address=options.get('host'),
+                                  port=int(options.get('port')))
         try:
             if not server.start():
                 self.stdout.write(self.style.ERROR('FAILED'))
                 return
 
             self.stdout.write(self.style.SUCCESS('DONE'))
-
-            # Run the test suite
-            self.stdout.write('Starting test runner...')
-            runner_args = options.get('runner') or []
-            runner_in_docker = parse_command_line_bool_arg(
-                options.get('runner_in_docker'))
-            docker_image = options.get('runner_docker_image')
-            test_runner_return_code = start_test_runner(
-                runner_args, runner_in_docker, docker_image
-            )
-            if test_runner_return_code is not os.EX_OK:
-                raise CommandError('Test run has failed')
+            if not backend_only:
+                # Run the test suite
+                self.stdout.write('Starting test runner...')
+                runner_args = options.get('runner') or []
+                runner_in_docker = parse_command_line_bool_arg(
+                    options.get('runner_in_docker'))
+                docker_image = options.get('runner_docker_image')
+                test_runner_return_code = start_test_runner(
+                    runner_args, runner_in_docker, docker_image
+                )
+                if test_runner_return_code is not os.EX_OK:
+                    raise CommandError('Test run has failed')
         finally:
+            if backend_only and server.server_process.is_alive():
+                # press to stop
+                try:
+                    raw_input("Press Enter to exit...")
+                except NameError:
+                    input("Press Enter to exit...")
             # Stop the server and teardown the test database
             self.stdout.write('Shutting down Django server... ', ending='')
             server.terminate()
