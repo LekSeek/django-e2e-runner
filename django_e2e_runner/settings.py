@@ -9,6 +9,11 @@ KEEP_DATABASE = True
 TEST_DATA_MANAGER = 'django_e2e_runner.database.GlobalTransaction'
 FIXTURE_LOADER = 'django_e2e_runner.database.ScriptFixtureLoader'
 
+# Only safe with a data manager that commits its fixtures (e.g. CommittedData);
+# the default GlobalTransaction keeps data on one connection, so extra worker
+# threads would read an empty database.
+THREADED_SERVER = False
+
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 8001
 

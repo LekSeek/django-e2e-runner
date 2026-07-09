@@ -10,10 +10,7 @@ from django_e2e_runner.server import DjangoTestServer
 from django_e2e_runner.test_runner import start_test_runner
 
 
-# TODO move to command line arg/settings file; enforce with global_transaction
 from django_e2e_runner.utils import parse_command_line_bool_arg
-
-THREADED_SERVER = False
 
 
 class Command(BaseCommand):
@@ -79,7 +76,7 @@ class Command(BaseCommand):
         self.stdout.write('Starting Django test server... ', ending='')
         server_output = parse_command_line_bool_arg(
             options.get('server_output'))
-        server = DjangoTestServer(use_threading=THREADED_SERVER,
+        server = DjangoTestServer(use_threading=settings.THREADED_SERVER,
                                   verbose=server_output,
                                   address=options.get('host'),
                                   port=int(options.get('port')))
